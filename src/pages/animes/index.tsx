@@ -1,44 +1,70 @@
+// eslint-disable-next-line no-unused-vars
 import { ComponentClass } from "react";
 import Taro, { Component } from "@tarojs/taro";
 import { View } from "@tarojs/components";
-import AnimeList from "./anime-list/index";
-import api from "../../utils/api";
+import { connect } from "@tarojs/redux";
+import { getAnimeList, getAnimeDetail } from "../../actions/anime";
 
 import "./index.less";
 
-class Animes extends Component {
+type PageState = {
+  searchValue: string;
+};
+
+type PageStateProps = {
+  animeList: Array<any>;
+};
+
+type PageDispatchProps = {
+  getAnimeList: () => any;
+  getAnimeDetail: (object) => any;
+};
+
+type IProps = PageStateProps & PageDispatchProps;
+
+interface Animes {
+  props: IProps;
+}
+
+@connect(
+  ({ anime }) => ({
+    // anime: anime,
+    animeList: anime
+    // animeDetail: anime.animeDetail
+  }),
+  dispatch => ({
+    getAnimeList() {
+      dispatch(getAnimeList());
+    },
+    getAnimeDetail(object) {
+      dispatch(getAnimeDetail(object));
+    }
+  })
+)
+class Animes extends Component<IProps, PageState> {
   constructor(props) {
     super(props);
-    this.state = {
-      animeList: []
-    };
   }
 
-  componentWillMount() {}
+  componentWillMount() {
+    this.getAnime();
+  }
 
-  async getAnime() {
-    const res = await api.get("/animes");
-    this.setState({
-      animeList: res.data
-    });
+  getAnime() {
+    // eslint-disable-next-line taro/this-props-function
+    this.props.getAnimeList();
+  }
+
+  render() {
+    const { animeList } = this.props;
+    return (
+      <View>
+        {animeList.map((item, index) => (
+          <View key={index}>{item.title}</View>
+        ))}
+      </View>
+    );
   }
 }
 
-// function Animes() {
-//   const [loading, setLoading] = useState(true);
-//   const [animeList, setAnimeList] = useState([]);
-
-//   useAsyncEffect(async () => {
-//     const res = await api.getAllAnime("15");
-//     setLoading(false);
-//     setAnimeList(res && res.data);
-//   }, []);
-
-//   return (
-//     <View>
-//       <AnimeList title={animeList} loading={loading}></AnimeList>
-//     </View>
-//   );
-// }
-
-export default Animes;
+export default Animes as ComponentClass<IProps, PageState>;
